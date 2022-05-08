@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Стары Менск</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""></script>
+    <script src="L.ArrowCircle.js"></script>
+	<link rel="stylesheet" href="MarkerCluster.css" />
+	<link rel="stylesheet" href="MarkerCluster.Default.css" />
+	<script src="leaflet.markercluster-src.js"></script>
+    <style>
+		body {
+			padding: 0;
+			margin: 0;
+		}
+		html, body, #map {
+			height: 100%;
+			width: 100vw;
+		}
+		#details {
+			display: none;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			z-index:1000001;
+		}
+		#detailsTitle {
+			background: #FFF;
+		}
+		#detailsPhoto {
+			max-width: 100%;
+			max-height: 100%;
+			margin: auto;
+		}
+    </style>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7PXQY8MFJD"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7PXQY8MFJD');
+</script>
+  </head>
+  <body id="map">
+    <div id="details" onClick="javascript: hidePhoto();">
+      <div id="detailsTitle"></div>
+      <img id="detailsPhoto" />
+    </div>
+  </body>
+  <script src="data.js" ></script>
+  <script>
+
+var map = L.map('map', {
+	preferCanvas: true,
+	maxBounds: [ [54.0,27.36], [53.81, 27.8] ]
+});
+
+var OpenStreetMap_DE = L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+	minZoom: 10,
+	maxZoom: 19,
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, photos from <a href="https://pastvu.com">pastvu.com</a>'
+});
+OpenStreetMap_DE.addTo(map);
+
+map.on('locationfound', onLocationFound);
+map.locate({
+	setView: true,
+	enableHighAccuracy: true
+});
+
+var markers = L.markerClusterGroup();
+
+for (const obj of data){
+	var color="rgb(200, 30, 240)";
+	if (obj.year < 1900) {
+		color = "#00A";
+	} else if (obj.year < 1960) {
+		color = "#A00";
+	} else {
+		color = "#0A0";
+	}
+	var rotation;
+	switch(obj.dir) {
+	case 'n':
+		rotation = 0;
+		break;
+	case 'ne':
+		rotation = 45;
+		break;
+	case 'e':
+		rotation = 90;
+		break;
+	case 'se':
+		rotation = 135;
+		break;
+	case 's':
+		rotation = 180;
+		break;
+	case 'sw':
+		rotation = 225;
+		break;
+	case 'w':
+		rotation = 270;
+		break;
+	case 'nw':
+		rotation = 315;
+		break;
+	default:
+		rotation = null;
+	}
+	var m = L.marker.arrowCircle(new L.LatLng(obj.lat, obj.lon), {  // [obj.lat, obj.lon], {
+			iconOptions: { color: color, rotation: rotation },
+	}).on('click', function(e) {
+		var y = obj.year2==obj.year ? obj.year : obj.year+"-"+obj.year2;
+		document.getElementById('detailsTitle').textContent = obj.title+", "+y;
+		document.getElementById('detailsPhoto').src = 'https://pastvu.com/_p/a/'+obj.file;
+		document.getElementById('details').style.display = 'block';
+	}); //.addTo(map);
+	markers.addLayer(m);
+}
+map.addLayer(markers);
+
+    function onLocationFound(e) {
+        var radius = e.accuracy / 2;
+
+        L.marker(e.latlng).addTo(map);
+
+        L.circle(e.latlng, radius).addTo(map);
+    }
+
+function hidePhoto(){
+	document.getElementById('details').style.display = 'none';
+}
+  </script>
+</html>
